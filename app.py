@@ -24,13 +24,23 @@
 
 # if __name__ == '__main__':
 #     app.run(debug=True)
-import flask
-
-
+import os
+import base64
 from flask import Flask, request, jsonify
 import yt_dlp
 
-app = Flask(__name__)  # ✅ correct app initialization
+app = Flask(__name__)
+
+# Base64 encode කරන ලද cookies content එක environment variable එකෙන් ගන්න
+COOKIES_B64 = os.getenv('COOKIES_B64')
+
+def save_cookies_file():
+    if not COOKIES_B64:
+        return None
+    decoded = base64.b64decode(COOKIES_B64)
+    with open('cookies.txt', 'wb') as f:
+        f.write(decoded)
+    return 'cookies.txt'
 
 @app.route('/info', methods=['GET'])
 def video_info():
@@ -38,11 +48,14 @@ def video_info():
     if not video_url:
         return jsonify({'error': 'No URL provided'}), 400
 
+    cookies_file = save_cookies_file()
+
     ydl_opts = {
-    'quiet': True,
-    'skip_download': True,
-    'cookiefile': 'cookies.txt'   # cookies.txt file එක project folder එකේ තිබිය යුතුයි
-}
+        'quiet': True,
+        'skip_download': True,
+    }
+    if cookies_file:
+        ydl_opts['cookiefile'] = cookies_file
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -57,5 +70,6 @@ def video_info():
         })
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
 if __name__ == '__main__':
      app.run(debug=True)
