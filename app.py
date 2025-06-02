@@ -38,7 +38,12 @@ def video_info():
     if not video_url:
         return jsonify({'error': 'No URL provided'}), 400
 
-    ydl_opts = {'quiet': True, 'skip_download': True}
+    ydl_opts = {
+    'quiet': True,
+    'skip_download': True,
+    'cookiefile': 'cookies.txt'   # cookies.txt file එක project folder එකේ තිබිය යුතුයි
+}
+
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(video_url, download=False)
