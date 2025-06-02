@@ -24,52 +24,38 @@
 
 # if __name__ == '__main__':
 #     app.run(debug=True)
-import os
-import base64
 from flask import Flask, request, jsonify
 import yt_dlp
+import os
 
 app = Flask(__name__)
 
-# Base64 encode කරන ලද cookies content එක environment variable එකෙන් ගන්න
-COOKIES_B64 = os.getenv('COOKIES_B64')
+DOWNLOAD_DIR = "downloads"
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-def save_cookies_file():
-    if not COOKIES_B64:
-        return None
-    decoded = base64.b64decode(COOKIES_B64)
-    with open('cookies.txt', 'wb') as f:
-        f.write(decoded)
-    return 'cookies.txt'
+@app.route('/download', methods=['POST'])
+def download_video():
+    data = request.get_json()
+    video_url = data.get('url')
 
-@app.route('/info', methods=['GET'])
-def video_info():
-    video_url = request.args.get('url')
     if not video_url:
-        return jsonify({'error': 'No URL provided'}), 400
-
-    cookies_file = save_cookies_file()
+        return jsonify({"error": "No URL provided"}), 400
 
     ydl_opts = {
-        'quiet': True,
-        'skip_download': True,
+        'format': 'best',
+        'outtmpl': os.path.join(DOWNLOAD_DIR, '%(title)s.%(ext)s')
     }
-    if cookies_file:
-        ydl_opts['cookiefile'] = cookies_file
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=False)
-        return jsonify({
-            'status': 'success',
-            'title': info.get('title'),
-            'duration': info.get('duration'),
-            'uploader': info.get('uploader'),
-            'thumbnail': info.get('thumbnail'),
-            'webpage_url': info.get('webpage_url')
-        })
+            info = ydl.extract_info(video_url, download=True)
+            return jsonify({
+                "title": info.get('title'),
+                "filename": ydl.prepare_filename(info),
+                "status": "Downloaded successfully"
+            })
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-     app.run(debug=True)
+    app.run(debug=True)
