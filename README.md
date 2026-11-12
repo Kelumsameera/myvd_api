@@ -35,7 +35,7 @@ Request body:
 
 On success, the API returns a title, a saved filename and status. Downloaded media is stored under `downloads/`.
 
-The currently published implementation does not fully validate URLs or restrict download targets; never send untrusted URLs to it. A separate draft PR adds basic JSON validation and disables Flask debug, but does not solve SSRF or resource exhaustion.
+The currently published implementation does not fully validate URLs or restrict download targets; never send untrusted URLs to it. Basic JSON validation is now included, and running `python app.py` uses `debug=False`. These changes do **not** prevent SSRF, resource exhaustion or unauthorized downloads.
 
 ## Before any real deployment
 
