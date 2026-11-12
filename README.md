@@ -1,35 +1,50 @@
-# 🎥 Flask YouTube Video Downloader API  
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+# Video Downloader API (Flask + yt-dlp)
 
-A simple Flask-based API that downloads videos from YouTube (and other supported platforms) using [`yt-dlp`](https://github.com/yt-dlp/yt-dlp).
+Small Flask API for downloading media through `yt-dlp` on systems you control.
 
----
+> **Development project:** Do not expose this service publicly without authentication, strict URL/network restrictions, quotas and download storage limits. Download content only where you have permission and comply with the source platform's terms.
 
-## 🚀 Features
-- Download videos in the **best available quality**.
-- Saves files to a `downloads` folder automatically.
-- Returns **video title** and **saved filename** in the response.
-- Easy to integrate into other applications.
+## Requirements
 
----
+- Python environment compatible with the installed `requirements.txt`
+- ffmpeg when required by chosen media formats
+- Sufficient local disk space
 
-## 📦 Requirements
-Before running the project, make sure you have:
-- Python 3.7+
-- pip (Python package manager)
-- `ffmpeg` installed on your system (optional but recommended for better format handling)
+## Local setup
 
----
+```bash
+git clone https://github.com/Kelumsameera/myvd_api.git
+cd myvd_api
+python -m venv .venv
+# Activate .venv for your shell
+pip install -r requirements.txt
+python app.py
+```
 
-## 🔧 Installation
+The current application uses Flask's development server; it is not suitable for serving untrusted internet traffic.
 
-1. **Clone this repository**
-   ```bash
-   git clone https://github.com/Kelumsameera/myvd_api.git
-   cd myvd_api
-⚠️ Disclaimer
-This project is for educational purposes only.
-Please ensure you comply with YouTube's and other platforms' Terms of Service before downloading any content.
+## API
 
-Create and activate a virtual environment (optional but recommended)
+### POST /download
 
+Request body:
+
+```json
+{ "url": "https://example.com/your-authorized-media" }
+```
+
+On success, the API returns a title, a saved filename and status. Downloaded media is stored under `downloads/`.
+
+The currently published implementation does not fully validate URLs or restrict download targets; never send untrusted URLs to it. A separate draft PR adds basic JSON validation and disables Flask debug, but does not solve SSRF or resource exhaustion.
+
+## Before any real deployment
+
+- Add login/API authentication and rate limiting.
+- Enforce permitted URL schemes, known-safe destinations, safe redirects and outbound-network isolation.
+- Restrict file sizes, timeouts, concurrency and storage growth; handle cleanup.
+- Review platform terms and copyright permissions.
+- Add automated tests for malformed input and denied network targets.
+
+## Status
+
+This README documents the code and limitations. It is not a claim that the service has passed production security testing.
