@@ -23,7 +23,7 @@
 #         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 # if __name__ == '__main__':
-#     app.run(debug=True)
+#     app.run(debug=False)
 from flask import Flask, request, jsonify
 import yt_dlp
 import os
@@ -35,11 +35,15 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 @app.route('/download', methods=['POST'])
 def download_video():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "A JSON object is required"}), 400
     video_url = data.get('url')
 
-    if not video_url:
-        return jsonify({"error": "No URL provided"}), 400
+    if not isinstance(video_url, str) or not video_url.strip():
+        return jsonify({"error": "A non-empty URL is required"}), 400
+
+    video_url = video_url.strip()
 
     ydl_opts = {
         'format': 'best',
